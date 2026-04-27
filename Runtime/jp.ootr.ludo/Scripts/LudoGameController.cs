@@ -151,6 +151,14 @@ namespace jp.ootr.ludo
             return -2;
         }
 
+        /// <summary>View 層がステップ→盤面位置を変換するためのユーティリティ。</summary>
+        public int ComputeTokenBoardPos(int tokenIdx, int steps)
+        {
+            if (steps < 0) return -1;           // Yard
+            if (steps >= TOTAL_STEPS) return -2; // Home 完了
+            return ComputeBoardPos(tokenIdx / 4, steps);
+        }
+
         // ─── State Reset ─────────────────────────────────────────────────────
         private void ResetAllState()
         {

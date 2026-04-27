@@ -5743,10 +5743,10 @@ MonoBehaviour:
   boardView: {fileID: 2040314806}
   uiController: {fileID: 842188076}
   seatRequests:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 275136603}
+  - {fileID: 776987861}
+  - {fileID: 97309061}
+  - {fileID: 801325295}
 --- !u!114 &1254321213
 MonoBehaviour:
   m_ObjectHideFlags: 2
@@ -9176,6 +9176,22 @@ MonoBehaviour:
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 51970474}
     ID: 44
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 275136600}
+    ID: 45
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 776987858}
+    ID: 46
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 97309058}
+    ID: 47
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 801325292}
+    ID: 48
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
   portraitCameraPositionOffset: {x: 0, y: 0, z: 0}

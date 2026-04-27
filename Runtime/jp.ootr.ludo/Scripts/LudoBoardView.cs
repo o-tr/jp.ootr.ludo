@@ -26,8 +26,10 @@ namespace jp.ootr.ludo
         private int[]        _localVisualSlot  = new int[16];
         private Vector3[]    _targetPos        = new Vector3[16];
         private bool[]       _animating        = new bool[16];
+        private int[]        _animTargetSteps  = new int[16];
 
-        private const float ANIM_SPEED = 3f;
+        // 1マス移動あたりのアニメーション速度（Lerp係数）
+        private const float STEP_ANIM_SPEED = 15f;
 
         void Start()
         {
@@ -55,13 +57,25 @@ namespace jp.ootr.ludo
             ComputeVisualSlots(ctrl);
             for (int i = 0; i < 16; i++)
             {
-                int newPos = ctrl.GetTokenBoardPos(i);
-                if (newPos != viewTokenBoardPos[i])
+                int newSteps = ctrl.GetTokenSteps(i);
+                if (newSteps == viewTokenSteps[i]) continue;
+
+                if (newSteps > viewTokenSteps[i])
                 {
+                    // 前進移動：1マスずつ順に経由するアニメーション
+                    _animTargetSteps[i] = newSteps;
+                    _animating[i]       = true;
+                    AdvanceToNextStep(i);
+                }
+                else
+                {
+                    // 捕獲・リセット（steps が減る）：直接スナップ
+                    int newPos = ctrl.GetTokenBoardPos(i);
                     Transform anchor = GetAnchor(i, newPos);
-                    if (anchor != null)
-                        _targetPos[i] = anchor.position + GetVisualOffset(i, newPos);
-                    _animating[i]        = true;
+                    if (anchor != null && tokenObjects[i] != null)
+                        tokenObjects[i].position = anchor.position + GetVisualOffset(i, newPos);
+                    _animating[i]        = false;
+                    viewTokenSteps[i]    = newSteps;
                     viewTokenBoardPos[i] = newPos;
                 }
             }
@@ -82,9 +96,32 @@ namespace jp.ootr.ludo
                 viewTokenBoardPos[i] = pos;
                 viewTokenSteps[i]    = ctrl.GetTokenSteps(i);
                 viewTokenState[i]    = ctrl.GetTokenState(i);
+                _animTargetSteps[i]  = ctrl.GetTokenSteps(i);
             }
             viewTurnSerial = ctrl.GetTurnSerial();
             UpdateHighlights(ctrl);
+        }
+
+        /// <summary>
+        /// viewTokenSteps[tokenIdx] の次のステップへのウェイポイントを設定する。
+        /// Update() と OnStateUpdated() の両方から呼ばれる。
+        /// </summary>
+        private void AdvanceToNextStep(int tokenIdx)
+        {
+            int nextStep     = viewTokenSteps[tokenIdx] + 1;
+            int nextBoardPos = controller.ComputeTokenBoardPos(tokenIdx, nextStep);
+            Transform anchor = GetAnchor(tokenIdx, nextBoardPos);
+            if (anchor == null)
+            {
+                // ホーム完了など、アンカーが存在しないマスに達した場合は終了
+                _animating[tokenIdx] = false;
+                return;
+            }
+            // 途中マスはオフセットなし、最終マスのみ重なりオフセットを適用
+            Vector3 offset = (nextStep == _animTargetSteps[tokenIdx])
+                ? GetVisualOffset(tokenIdx, nextBoardPos)
+                : Vector3.zero;
+            _targetPos[tokenIdx] = anchor.position + offset;
         }
 
         private void ComputeVisualSlots(LudoGameController ctrl)
@@ -189,12 +226,26 @@ namespace jp.ootr.ludo
                 tokenObjects[i].position = Vector3.Lerp(
                     tokenObjects[i].position,
                     _targetPos[i],
-                    Time.deltaTime * ANIM_SPEED);
+                    Time.deltaTime * STEP_ANIM_SPEED);
 
                 if (Vector3.Distance(tokenObjects[i].position, _targetPos[i]) < 0.001f)
                 {
                     tokenObjects[i].position = _targetPos[i];
-                    _animating[i] = false;
+
+                    // 1ステップ進める
+                    viewTokenSteps[i]++;
+                    viewTokenBoardPos[i] = controller != null
+                        ? controller.ComputeTokenBoardPos(i, viewTokenSteps[i])
+                        : viewTokenBoardPos[i];
+
+                    if (viewTokenSteps[i] >= _animTargetSteps[i])
+                    {
+                        _animating[i] = false;
+                    }
+                    else
+                    {
+                        AdvanceToNextStep(i);
+                    }
                 }
             }
         }
