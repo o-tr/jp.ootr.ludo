@@ -47,6 +47,7 @@ namespace jp.ootr.ludo
         private int[]        _legalMoveTokenIndices = new int[4];
         private int          _legalMoveCount;
         private bool         _isInitialized;
+        private bool         _afterAnimationGameEnded = false;
 
         [SerializeField] private LudoBoardView    boardView;
         [SerializeField] private LudoUIController uiController;
@@ -244,7 +245,8 @@ namespace jp.ootr.ludo
             else if (_legalMoveCount == 1)
             {
                 ExecuteMove(_legalMoveTokenIndices[0]);
-                if (_gamePhase != GamePhase.GameEnd) AdvanceTurn();
+                _afterAnimationGameEnded = (_gamePhase == GamePhase.GameEnd);
+                _gamePhase = GamePhase.ResolvingMove;
                 PushState();
             }
             else
@@ -265,7 +267,8 @@ namespace jp.ootr.ludo
             if (!isLegal) return;
 
             ExecuteMove(globalIdx);
-            if (_gamePhase != GamePhase.GameEnd) AdvanceTurn();
+            _afterAnimationGameEnded = (_gamePhase == GamePhase.GameEnd);
+            _gamePhase = GamePhase.ResolvingMove;
             PushState();
         }
 
@@ -280,6 +283,24 @@ namespace jp.ootr.ludo
                 _currentPlayerSlot = FindNextActiveSlot(_currentPlayerSlot);
                 _gamePhase         = GamePhase.TurnBegin;
             }
+        }
+
+        // LudoBoardView から移動アニメーション完了時に呼ばれる（オーナーのみ処理）
+        public void OnMoveAnimationComplete()
+        {
+            if (!Networking.IsOwner(gameObject)) return;
+            if (_gamePhase != GamePhase.ResolvingMove) return;
+
+            if (_afterAnimationGameEnded)
+            {
+                _gamePhase               = GamePhase.GameEnd;
+                _afterAnimationGameEnded = false;
+            }
+            else
+            {
+                AdvanceTurn();
+            }
+            PushState();
         }
 
         // ─── Legal Move Logic ────────────────────────────────────────────────
@@ -690,8 +711,10 @@ namespace jp.ootr.ludo
 
             if (_currentPlayerSlot == slot &&
                 (_gamePhase == GamePhase.TurnBegin ||
-                 _gamePhase == GamePhase.SelectMove))
+                 _gamePhase == GamePhase.SelectMove ||
+                 _gamePhase == GamePhase.ResolvingMove))
             {
+                _afterAnimationGameEnded = false;
                 _currentPlayerSlot = FindNextActiveSlot(slot);
                 _gamePhase         = GamePhase.TurnBegin;
             }
@@ -711,6 +734,17 @@ namespace jp.ootr.ludo
                 _gamePhase == GamePhase.Idle          ||
                 _gamePhase == GamePhase.Lobby         ||
                 _gamePhase == GamePhase.DetermineOrder) return;
+
+            // アニメーション待機中にオーナーが変わった場合：ゲーム終了チェック後にターン進行
+            if (_gamePhase == GamePhase.ResolvingMove)
+            {
+                _afterAnimationGameEnded = false;
+                CheckGameEnd();
+                if (_gamePhase != GamePhase.GameEnd)
+                    AdvanceTurn();
+                PushState();
+                return;
+            }
 
             if (!_playerActive[_currentPlayerSlot])
             {

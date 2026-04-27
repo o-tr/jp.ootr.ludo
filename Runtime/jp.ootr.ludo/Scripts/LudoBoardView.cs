@@ -27,6 +27,9 @@ namespace jp.ootr.ludo
         private Vector3[]    _targetPos        = new Vector3[16];
         private bool[]       _animating        = new bool[16];
         private int[]        _animTargetSteps  = new int[16];
+        private int          _movingTokenIdx      = -1;  // 現在移動中のコマインデックス
+        private int          _pendingCaptureToken = -1;  // 移動完了後にヤードへ戻すコマインデックス
+        private bool[]       _animatingCapture    = new bool[16]; // ヤードへの帰還アニメーション中フラグ
 
         // 1マス移動あたりのアニメーション速度（Lerp係数）
         private const float STEP_ANIM_SPEED = 15f;
@@ -63,20 +66,34 @@ namespace jp.ootr.ludo
                 if (newSteps > viewTokenSteps[i])
                 {
                     // 前進移動：1マスずつ順に経由するアニメーション
+                    _movingTokenIdx     = i;
                     _animTargetSteps[i] = newSteps;
                     _animating[i]       = true;
+                    _animatingCapture[i] = false;
                     AdvanceToNextStep(i);
                 }
                 else
                 {
-                    // 捕獲・リセット（steps が減る）：直接スナップ
+                    // steps が減る：捕獲またはリセット
                     int newPos = ctrl.GetTokenBoardPos(i);
-                    Transform anchor = GetAnchor(i, newPos);
-                    if (anchor != null && tokenObjects[i] != null)
-                        tokenObjects[i].position = anchor.position + GetVisualOffset(i, newPos);
                     _animating[i]        = false;
+                    _animatingCapture[i] = false;
                     viewTokenSteps[i]    = newSteps;
                     viewTokenBoardPos[i] = newPos;
+
+                    if (newSteps == -1 && ctrl.GetPhase() == GamePhase.ResolvingMove)
+                    {
+                        // 捕獲：移動コマが到達してからヤードへ戻すため、
+                        // 現在の見た目はそのままに保留する
+                        _pendingCaptureToken = i;
+                    }
+                    else
+                    {
+                        // リセット・その他：直接スナップ
+                        Transform snapAnchor = GetAnchor(i, newPos);
+                        if (snapAnchor != null && tokenObjects[i] != null)
+                            tokenObjects[i].position = snapAnchor.position + GetVisualOffset(i, newPos);
+                    }
                 }
             }
             UpdateHighlights(ctrl);
@@ -93,11 +110,14 @@ namespace jp.ootr.ludo
                 if (anchor != null && tokenObjects[i] != null)
                     tokenObjects[i].position = anchor.position + GetVisualOffset(i, pos);
                 _animating[i]        = false;
+                _animatingCapture[i] = false;
                 viewTokenBoardPos[i] = pos;
                 viewTokenSteps[i]    = ctrl.GetTokenSteps(i);
                 viewTokenState[i]    = ctrl.GetTokenState(i);
                 _animTargetSteps[i]  = ctrl.GetTokenSteps(i);
             }
+            _movingTokenIdx      = -1;
+            _pendingCaptureToken = -1;
             viewTurnSerial = ctrl.GetTurnSerial();
             UpdateHighlights(ctrl);
         }
@@ -216,35 +236,73 @@ namespace jp.ootr.ludo
             controller.OnTokenPressed(localSlot);
         }
 
+        private void StartCaptureAnimation(int tokenIdx)
+        {
+            if (tokenObjects[tokenIdx] == null) return;
+            Transform yardAnchor = GetAnchor(tokenIdx, -1);
+            if (yardAnchor == null) return;
+            _targetPos[tokenIdx]        = yardAnchor.position;
+            _animatingCapture[tokenIdx] = true;
+        }
+
         void Update()
         {
             for (int i = 0; i < 16; i++)
             {
-                if (!_animating[i]) continue;
                 if (tokenObjects[i] == null) continue;
 
-                tokenObjects[i].position = Vector3.Lerp(
-                    tokenObjects[i].position,
-                    _targetPos[i],
-                    Time.deltaTime * STEP_ANIM_SPEED);
-
-                if (Vector3.Distance(tokenObjects[i].position, _targetPos[i]) < 0.001f)
+                if (_animating[i])
                 {
-                    tokenObjects[i].position = _targetPos[i];
+                    tokenObjects[i].position = Vector3.Lerp(
+                        tokenObjects[i].position,
+                        _targetPos[i],
+                        Time.deltaTime * STEP_ANIM_SPEED);
 
-                    // 1ステップ進める
-                    viewTokenSteps[i]++;
-                    viewTokenBoardPos[i] = controller != null
-                        ? controller.ComputeTokenBoardPos(i, viewTokenSteps[i])
-                        : viewTokenBoardPos[i];
-
-                    if (viewTokenSteps[i] >= _animTargetSteps[i])
+                    if (Vector3.Distance(tokenObjects[i].position, _targetPos[i]) < 0.001f)
                     {
-                        _animating[i] = false;
+                        tokenObjects[i].position = _targetPos[i];
+
+                        // 1ステップ進める
+                        viewTokenSteps[i]++;
+                        viewTokenBoardPos[i] = controller != null
+                            ? controller.ComputeTokenBoardPos(i, viewTokenSteps[i])
+                            : viewTokenBoardPos[i];
+
+                        if (viewTokenSteps[i] >= _animTargetSteps[i])
+                        {
+                            _animating[i] = false;
+                            if (i == _movingTokenIdx)
+                            {
+                                _movingTokenIdx = -1;
+                                // 捕獲待ちコマがあれば到達後にヤードへのアニメーション開始
+                                if (_pendingCaptureToken != -1)
+                                {
+                                    StartCaptureAnimation(_pendingCaptureToken);
+                                    _pendingCaptureToken = -1;
+                                }
+                                // オーナーに移動完了を通知（非オーナーは内部でガードされる）
+                                if (controller != null)
+                                    controller.OnMoveAnimationComplete();
+                            }
+                        }
+                        else
+                        {
+                            AdvanceToNextStep(i);
+                        }
                     }
-                    else
+                }
+                else if (_animatingCapture[i])
+                {
+                    // 捕獲されたコマのヤードへの帰還アニメーション
+                    tokenObjects[i].position = Vector3.Lerp(
+                        tokenObjects[i].position,
+                        _targetPos[i],
+                        Time.deltaTime * STEP_ANIM_SPEED);
+
+                    if (Vector3.Distance(tokenObjects[i].position, _targetPos[i]) < 0.001f)
                     {
-                        AdvanceToNextStep(i);
+                        tokenObjects[i].position = _targetPos[i];
+                        _animatingCapture[i] = false;
                     }
                 }
             }
