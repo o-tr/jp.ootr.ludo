@@ -1,0 +1,22 @@
+{
+  "name": "jp.ootr.ludo",
+  "displayName": "ootr式ルドー盤",
+  "version": "0.0.1",
+  "license": "MIT",
+  "unity": "2022.3",
+  "description": "Simple Ludo gimmick for VRChat",
+  "author": {
+    "email": "ootr@ootr.jp",
+    "name": "ootr",
+    "url": "https://github.com/o-tr"
+  },
+  "url": "https://github.com/o-tr/jp.ootr.ludo/releases/latest/download/release.zip",
+  "changelogUrl": "https://github.com/o-tr/jp.ootr.ludo/releases/",
+  "licensesUrl": "https://github.com/o-tr/jp.ootr.ludo/blob/release/LICENSE",
+  "documentationUrl": "https://docs.ootr.jp/",
+  "vpmDependencies": {
+    "com.vrchat.base": "^3.6.1",
+    "com.vrchat.worlds": "^3.6.1",
+    "jp.ootr.common": "~0.1.9"
+  }
+}
