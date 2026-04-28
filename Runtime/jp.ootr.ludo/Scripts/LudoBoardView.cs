@@ -24,6 +24,7 @@ namespace jp.ootr.ludo
         private int          viewTurnSerial    = -1;
         private bool         _isInitialized    = false;
         private int[]        _localVisualSlot  = new int[16];
+        private int[]        _visualSlotCounts = new int[40];
         private Vector3[]    _targetPos        = new Vector3[16];
         private bool[]       _animating        = new bool[16];
         private int[]        _animTargetSteps  = new int[16];
@@ -146,13 +147,13 @@ namespace jp.ootr.ludo
 
         private void ComputeVisualSlots(LudoGameController ctrl)
         {
-            int[] counts = new int[40];
+            for (int i = 0; i < 40; i++) _visualSlotCounts[i] = 0;
             for (int i = 0; i < 16; i++) _localVisualSlot[i] = 0;
             for (int i = 0; i < 16; i++)
             {
                 int pos = ctrl.GetTokenBoardPos(i);
                 if (pos >= 0 && pos < 40)
-                    _localVisualSlot[i] = counts[pos]++;
+                    _localVisualSlot[i] = _visualSlotCounts[pos]++;
             }
         }
 

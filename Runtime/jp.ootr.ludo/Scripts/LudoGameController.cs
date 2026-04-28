@@ -198,6 +198,8 @@ namespace jp.ootr.ludo
 
         private void DetermineOrder()
         {
+            if (CountActivePlayers() == 0) return;
+
             for (int i = 0; i < 4; i++)
                 _orderRolls[i] = _playerActive[i] ? Random.Range(1, 7) : 0;
 
@@ -474,6 +476,8 @@ namespace jp.ootr.ludo
         private void CheckPlayerFinished(int slot)
         {
             if (_playerFinished[slot]) return;
+            // HomeRow 内では重複禁止（IsHomeRowOccupied）のため、
+            // 4 駒がすべて HomeRow に入れば自動的に 4 マスを占有した状態となる
             for (int t = slot * 4; t < slot * 4 + 4; t++)
                 if (_tokenState[t] != TokenState.HomeRow) return;
 

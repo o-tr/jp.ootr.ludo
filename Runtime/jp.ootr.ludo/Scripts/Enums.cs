@@ -17,8 +17,7 @@ namespace jp.ootr.ludo
     {
         Yard,
         Track,
-        HomeRow,
-        Home
+        HomeRow
     }
 
     public enum EndRuleMode
