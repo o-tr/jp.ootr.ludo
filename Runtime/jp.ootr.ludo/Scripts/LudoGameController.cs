@@ -318,8 +318,6 @@ namespace jp.ootr.ludo
         private bool CanMoveToken(int tokenIdx, int dice)
         {
             TokenState state = _tokenState[tokenIdx];
-            if (state == TokenState.Home) return false;
-
             int slot = tokenIdx / 4;
 
             if (state == TokenState.Yard)
@@ -369,7 +367,6 @@ namespace jp.ootr.ludo
                     for (int t = slot * 4; t < slot * 4 + 4; t++)
                     {
                         if (_tokenState[t] != TokenState.Yard &&
-                            _tokenState[t] != TokenState.Home &&
                             _tokenBoardPos[t] == destBoardPos) return false;
                     }
                 }
@@ -391,7 +388,6 @@ namespace jp.ootr.ludo
                 for (int t = s * 4; t < s * 4 + 4; t++)
                 {
                     if (_tokenState[t] != TokenState.Yard &&
-                        _tokenState[t] != TokenState.Home &&
                         _tokenBoardPos[t] == startPos) return false;
                 }
             }

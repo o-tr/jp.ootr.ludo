@@ -24,6 +24,7 @@ namespace jp.ootr.ludo
         [SerializeField] private GameObject lobbyPanel;
         [SerializeField] private GameObject gamePanel;
         [SerializeField] private GameObject endPanel;
+        [SerializeField] private GameObject returnToLobbyButton;
 
         public void OnStateUpdated(LudoGameController ctrl)
         {
@@ -136,6 +137,9 @@ namespace jp.ootr.ludo
 
         private void UpdateEndUI(LudoGameController ctrl)
         {
+            bool isMaster = Networking.IsMaster;
+            if (returnToLobbyButton != null) returnToLobbyButton.SetActive(isMaster);
+
             // ランク(1-4) → スロットの逆引きテーブル。未対応は -1。
             int[] rankToSlot = new int[] { -1, -1, -1, -1 };
             for (int s = 0; s < 4; s++)
@@ -205,5 +209,6 @@ namespace jp.ootr.ludo
         public void OnLeaveSlot3Clicked() => controller.OnLeaveSlotPressed(3);
         public void OnStartClicked()      => controller.OnStartGamePressed();
         public void OnResetClicked()      => controller.OnResetGamePressed();
+        public void OnReturnToLobbyClicked() => controller.OnResetGamePressed();
     }
 }
