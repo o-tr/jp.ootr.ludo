@@ -2162,7 +2162,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: https://ootr.booth.pm/items/6750100
+  m_text: https://ootr.booth.pm/items/8277818
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: aba2b29b846de20438144097f5c8f8da, type: 2}
   m_sharedMaterial: {fileID: -6069958157732398970, guid: aba2b29b846de20438144097f5c8f8da, type: 2}
@@ -5171,6 +5171,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 64263353711274438}
+  - component: {fileID: 3046126388216750283}
   m_Layer: 0
   m_Name: Ludo
   m_TagString: Untagged
@@ -5195,6 +5196,18 @@ Transform:
   - {fileID: 6105393837766346773}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3046126388216750283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7301058923727049985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e03ebab4fd0581459ee296d06520dd0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &7355954527930843639
 GameObject:
   m_ObjectHideFlags: 0
