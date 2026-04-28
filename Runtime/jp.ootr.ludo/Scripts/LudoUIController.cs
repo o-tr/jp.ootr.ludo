@@ -125,19 +125,46 @@ namespace jp.ootr.ludo
             if (rollButton != null) rollButton.SetActive(canRoll);
         }
 
+        // スロット順 (Red / Blue / Yellow / Green) の TMP カラータグ
+        private readonly string[] SLOT_COLORS = new string[]
+        {
+            "#E53935",  // slot 0 : Red
+            "#1E88E5",  // slot 1 : Blue
+            "#FDD835",  // slot 2 : Yellow
+            "#43A047",  // slot 3 : Green
+        };
+
         private void UpdateEndUI(LudoGameController ctrl)
         {
+            // ランク(1-4) → スロットの逆引きテーブル。未対応は -1。
+            int[] rankToSlot = new int[] { -1, -1, -1, -1 };
+            for (int s = 0; s < 4; s++)
+            {
+                if (!ctrl.IsPlayerActive(s)) continue;
+                int r = ctrl.GetPlayerRank(s);
+                if (r >= 1 && r <= 4) rankToSlot[r - 1] = s;
+            }
+
+            // 行 i にランク i+1 のプレイヤー情報をまとめて rankTexts[i] へ書き込む。
+            // playerNameTexts は Lobby/DetermineOrder で引き続き使用するため空にする。
             for (int i = 0; i < 4; i++)
             {
+                if (playerNameTexts[i] != null) playerNameTexts[i].text = "";
+
                 if (rankTexts[i] == null) continue;
-                if (ctrl.IsPlayerActive(i))
+
+                int slot = rankToSlot[i];
+                if (slot == -1)
                 {
-                    int r = ctrl.GetPlayerRank(i);
-                    rankTexts[i].text = r > 0 ? r + " place" : "---";
+                    rankTexts[i].text = "---";
                 }
                 else
                 {
-                    rankTexts[i].text = "---";
+                    int pid = ctrl.GetPlayerId(slot);
+                    VRCPlayerApi p = VRCPlayerApi.GetPlayerById(pid);
+                    string name  = (p != null) ? p.displayName : "?";
+                    string color = SLOT_COLORS[slot];
+                    rankTexts[i].text = "<color=" + color + ">●</color> " + (i + 1) + " place  " + name;
                 }
             }
         }

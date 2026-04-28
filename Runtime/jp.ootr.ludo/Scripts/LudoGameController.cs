@@ -14,7 +14,7 @@ namespace jp.ootr.ludo
         [UdonSynced] private int         syncedCurrentPlayerSlot;
         [UdonSynced] private int         syncedDiceValue;
         [UdonSynced] private int         syncedTurnSerial;
-        [UdonSynced] private EndRuleMode syncedEndRuleMode         = EndRuleMode.FirstPlaceOnly;
+        [UdonSynced] private EndRuleMode syncedEndRuleMode         = EndRuleMode.FullRanking;
 
         [UdonSynced] private int[]        syncedPlayerIds      = new int[4];
         [UdonSynced] private bool[]       syncedPlayerActive   = new bool[4];
@@ -58,7 +58,7 @@ namespace jp.ootr.ludo
         private readonly int[] HOME_BASE    = { 40, 40, 40, 40 };
         private readonly int[] SAFE_SQUARES = { 0, 10, 20, 30 };
 
-        private const int TOTAL_STEPS = 44;  // steps 0-39=Track(40 squares), 40-43=HomeRow(4 squares), 44=Home
+        private const int TOTAL_STEPS = 43;  // steps 0-39=Track(40 squares), 40-43=HomeRow(4 squares)
 
         // ─── Lifecycle ───────────────────────────────────────────────────────
         void Start()
@@ -147,8 +147,8 @@ namespace jp.ootr.ludo
         // ─── Board Math ──────────────────────────────────────────────────────
         private int ComputeBoardPos(int slot, int steps)
         {
-            if (steps < 40)           return (START_POS[slot] + steps) % 40;
-            if (steps < TOTAL_STEPS)  return HOME_BASE[slot] + (steps - 40);
+            if (steps < 40)            return (START_POS[slot] + steps) % 40;
+            if (steps <= TOTAL_STEPS)  return HOME_BASE[slot] + (steps - 40);
             return -2;
         }
 
@@ -156,7 +156,7 @@ namespace jp.ootr.ludo
         public int ComputeTokenBoardPos(int tokenIdx, int steps)
         {
             if (steps < 0) return -1;           // Yard
-            if (steps >= TOTAL_STEPS) return -2; // Home 完了
+            if (steps > TOTAL_STEPS) return -2;  // Home 完了（到達不能）
             return ComputeBoardPos(tokenIdx / 4, steps);
         }
 
@@ -327,7 +327,6 @@ namespace jp.ootr.ludo
             int toSteps   = fromSteps + dice;
             if (toSteps > TOTAL_STEPS) return false;
             if (!IsPathClear(slot, fromSteps, toSteps)) return false;
-            if (toSteps == TOTAL_STEPS) return true;
 
             int destBoardPos = ComputeBoardPos(slot, toSteps);
             return CanLandAt(tokenIdx, destBoardPos);
@@ -375,6 +374,7 @@ namespace jp.ootr.ludo
             }
 
             if (destBoardPos < 40 && IsBlockAt(destBoardPos)) return false;
+            if (destBoardPos >= 40 && IsHomeRowOccupied(ownerSlot, destBoardPos)) return false;
 
             return true;
         }
@@ -400,6 +400,14 @@ namespace jp.ootr.ludo
                     if (++ownCount >= 2) return false;
 
             return true;
+        }
+
+        private bool IsHomeRowOccupied(int slot, int boardPos)
+        {
+            for (int t = slot * 4; t < slot * 4 + 4; t++)
+                if (_tokenState[t] == TokenState.HomeRow && _tokenBoardPos[t] == boardPos)
+                    return true;
+            return false;
         }
 
         private bool IsSafeSquare(int boardPos)
@@ -443,16 +451,11 @@ namespace jp.ootr.ludo
             int newSteps = _tokenSteps[globalTokenIdx] + _diceValue;
             _tokenSteps[globalTokenIdx] = newSteps;
 
-            if (newSteps >= TOTAL_STEPS)
-            {
-                _tokenState[globalTokenIdx]    = TokenState.Home;
-                _tokenBoardPos[globalTokenIdx] = -2;
-                CheckPlayerFinished(slot);
-            }
-            else if (newSteps >= 40)
+            if (newSteps >= 40)
             {
                 _tokenState[globalTokenIdx]    = TokenState.HomeRow;
                 _tokenBoardPos[globalTokenIdx] = ComputeBoardPos(slot, newSteps);
+                CheckPlayerFinished(slot);
             }
             else
             {
@@ -470,8 +473,9 @@ namespace jp.ootr.ludo
 
         private void CheckPlayerFinished(int slot)
         {
+            if (_playerFinished[slot]) return;
             for (int t = slot * 4; t < slot * 4 + 4; t++)
-                if (_tokenState[t] != TokenState.Home) return;
+                if (_tokenState[t] != TokenState.HomeRow) return;
 
             _playerRank[slot]     = CountFinishedPlayers() + 1;
             _playerFinished[slot] = true;
