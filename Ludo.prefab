@@ -495,7 +495,7 @@ GameObject:
   - component: {fileID: 7741562896186133439}
   - component: {fileID: 2498365887068440219}
   - component: {fileID: 477389053631593608}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: BoardRed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1072,7 +1072,7 @@ GameObject:
   - component: {fileID: 1964836189035596617}
   - component: {fileID: 7397891361817642836}
   - component: {fileID: 5470006148055339371}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2033,7 +2033,7 @@ GameObject:
   - component: {fileID: 6318340298230055611}
   - component: {fileID: 1937863106460806201}
   - component: {fileID: 5648840164772985182}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: BoardYellow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3385,7 +3385,7 @@ GameObject:
   - component: {fileID: 3628665739602446623}
   - component: {fileID: 6536292290716099181}
   - component: {fileID: 5086493220992420318}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: BoardGreen
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4557,7 +4557,7 @@ GameObject:
   - component: {fileID: 1376533177693534710}
   - component: {fileID: 8699815616855266491}
   - component: {fileID: 9095813013691514438}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: BoardBlue
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5031,7 +5031,7 @@ GameObject:
   - component: {fileID: 3761588728699242277}
   - component: {fileID: 1360771272885343051}
   - component: {fileID: 9129389266025540022}
-  m_Layer: 5
+  m_Layer: 0
   m_Name: BoardOutline
   m_TagString: Untagged
   m_Icon: {fileID: 0}
