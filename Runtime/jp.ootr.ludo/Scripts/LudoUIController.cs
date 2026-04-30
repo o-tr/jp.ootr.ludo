@@ -64,14 +64,16 @@ namespace jp.ootr.ludo
 
                 if (playerNameTexts[i] != null)
                 {
+                    string prefix = "<color=" + SLOT_COLORS[i] + ">●</color> ";
                     if (active)
                     {
                         VRCPlayerApi p = VRCPlayerApi.GetPlayerById(pid);
-                        playerNameTexts[i].text = (p != null) ? p.displayName : "?";
+                        string name = (p != null) ? p.displayName : "?";
+                        playerNameTexts[i].text = prefix + name;
                     }
                     else
                     {
-                        playerNameTexts[i].text = "---";
+                        playerNameTexts[i].text = prefix + "---";
                     }
                 }
 
@@ -114,7 +116,12 @@ namespace jp.ootr.ludo
                 else if (curSlot == localSlot)
                     turnText.text = "Your turn";
                 else
-                    turnText.text = "Player " + (curSlot + 1) + "'s turn";
+                {
+                    int pid2 = ctrl.GetPlayerId(curSlot);
+                    VRCPlayerApi p2 = VRCPlayerApi.GetPlayerById(pid2);
+                    string pname = (p2 != null) ? p2.displayName : "?";
+                    turnText.text = "<color=" + SLOT_COLORS[curSlot] + ">●</color> " + pname + "'s turn";
+                }
             }
 
             if (diceText != null)
