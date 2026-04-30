@@ -10,52 +10,52 @@ namespace jp.ootr.ludo
     public class LudoGameController : BaseClass
     {
         // ─── Synced Fields ───────────────────────────────────────────────────
-        [UdonSynced] private GamePhase   syncedGamePhase           = GamePhase.Idle;
-        [UdonSynced] private int         syncedCurrentPlayerSlot;
-        [UdonSynced] private int         syncedDiceValue;
-        [UdonSynced] private int         syncedTurnSerial;
-        [UdonSynced] private EndRuleMode syncedEndRuleMode         = EndRuleMode.FullRanking;
+        [UdonSynced] private GamePhase syncedGamePhase = GamePhase.Idle;
+        [UdonSynced] private int syncedCurrentPlayerSlot;
+        [UdonSynced] private int syncedDiceValue;
+        [UdonSynced] private int syncedTurnSerial;
+        [UdonSynced] private EndRuleMode syncedEndRuleMode = EndRuleMode.FullRanking;
 
-        [UdonSynced] private int[]        syncedPlayerIds      = new int[4];
-        [UdonSynced] private bool[]       syncedPlayerActive   = new bool[4];
-        [UdonSynced] private bool[]       syncedPlayerFinished = new bool[4];
-        [UdonSynced] private int[]        syncedPlayerRank     = new int[4];
-        [UdonSynced] private int[]        syncedOrderRolls     = new int[4];
+        [UdonSynced] private int[] syncedPlayerIds = new int[4];
+        [UdonSynced] private bool[] syncedPlayerActive = new bool[4];
+        [UdonSynced] private bool[] syncedPlayerFinished = new bool[4];
+        [UdonSynced] private int[] syncedPlayerRank = new int[4];
+        [UdonSynced] private int[] syncedOrderRolls = new int[4];
 
-        [UdonSynced] private TokenState[] syncedTokenState    = new TokenState[16];
-        [UdonSynced] private int[]        syncedTokenBoardPos = new int[16];
-        [UdonSynced] private int[]        syncedTokenSteps    = new int[16];
+        [UdonSynced] private TokenState[] syncedTokenState = new TokenState[16];
+        [UdonSynced] private int[] syncedTokenBoardPos = new int[16];
+        [UdonSynced] private int[] syncedTokenSteps = new int[16];
 
         // ─── Local Mirror Fields ─────────────────────────────────────────────
-        private GamePhase   _gamePhase;
-        private int         _currentPlayerSlot;
-        private int         _diceValue;
-        private int         _turnSerial;
+        private GamePhase _gamePhase;
+        private int _currentPlayerSlot;
+        private int _diceValue;
+        private int _turnSerial;
         private EndRuleMode _endRuleMode;
 
-        private int[]        _playerIds      = new int[4];
-        private bool[]       _playerActive   = new bool[4];
-        private bool[]       _playerFinished = new bool[4];
-        private int[]        _playerRank     = new int[4];
-        private int[]        _orderRolls     = new int[4];
+        private int[] _playerIds = new int[4];
+        private bool[] _playerActive = new bool[4];
+        private bool[] _playerFinished = new bool[4];
+        private int[] _playerRank = new int[4];
+        private int[] _orderRolls = new int[4];
 
-        private TokenState[] _tokenState    = new TokenState[16];
-        private int[]        _tokenBoardPos = new int[16];
-        private int[]        _tokenSteps    = new int[16];
+        private TokenState[] _tokenState = new TokenState[16];
+        private int[] _tokenBoardPos = new int[16];
+        private int[] _tokenSteps = new int[16];
 
-        private int[]        _tokenOwnerSlot        = new int[16];
-        private int[]        _legalMoveTokenIndices = new int[4];
-        private int          _legalMoveCount;
-        private bool         _isInitialized;
-        private bool         _afterAnimationGameEnded = false;
+        private int[] _tokenOwnerSlot = new int[16];
+        private int[] _legalMoveTokenIndices = new int[4];
+        private int _legalMoveCount;
+        private bool _isInitialized;
+        private bool _afterAnimationGameEnded = false;
 
-        [SerializeField] private LudoBoardView    boardView;
+        [SerializeField] private LudoBoardView boardView;
         [SerializeField] private LudoUIController uiController;
         [SerializeField] private LudoSeatRequest[] seatRequests = new LudoSeatRequest[4];
 
         // ─── Constants ───────────────────────────────────────────────────────
-        private readonly int[] START_POS    = { 0, 10, 20, 30 };
-        private readonly int[] HOME_BASE    = { 40, 40, 40, 40 };
+        private readonly int[] START_POS = { 0, 10, 20, 30 };
+        private readonly int[] HOME_BASE = { 40, 40, 40, 40 };
         private readonly int[] SAFE_SQUARES = { 0, 10, 20, 30 };
 
         private const int TOTAL_STEPS = 43;  // steps 0-39=Track(40 squares), 40-43=HomeRow(4 squares)
@@ -66,9 +66,9 @@ namespace jp.ootr.ludo
             for (int i = 0; i < 16; i++)
             {
                 _tokenOwnerSlot[i] = i / 4;
-                _tokenState[i]     = TokenState.Yard;
-                _tokenSteps[i]     = -1;
-                _tokenBoardPos[i]  = -1;
+                _tokenState[i] = TokenState.Yard;
+                _tokenSteps[i] = -1;
+                _tokenBoardPos[i] = -1;
             }
             _isInitialized = true;
 
@@ -83,26 +83,26 @@ namespace jp.ootr.ludo
         public override void _OnDeserialization()
         {
             base._OnDeserialization();
-            _gamePhase         = syncedGamePhase;
+            _gamePhase = syncedGamePhase;
             _currentPlayerSlot = syncedCurrentPlayerSlot;
-            _diceValue         = syncedDiceValue;
-            _turnSerial        = syncedTurnSerial;
-            _endRuleMode       = syncedEndRuleMode;
+            _diceValue = syncedDiceValue;
+            _turnSerial = syncedTurnSerial;
+            _endRuleMode = syncedEndRuleMode;
 
             for (int i = 0; i < 4; i++)
             {
-                _playerIds[i]      = syncedPlayerIds[i];
-                _playerActive[i]   = syncedPlayerActive[i];
+                _playerIds[i] = syncedPlayerIds[i];
+                _playerActive[i] = syncedPlayerActive[i];
                 _playerFinished[i] = syncedPlayerFinished[i];
-                _playerRank[i]     = syncedPlayerRank[i];
-                _orderRolls[i]     = syncedOrderRolls[i];
+                _playerRank[i] = syncedPlayerRank[i];
+                _orderRolls[i] = syncedOrderRolls[i];
             }
 
             for (int i = 0; i < 16; i++)
             {
-                _tokenState[i]    = syncedTokenState[i];
+                _tokenState[i] = syncedTokenState[i];
                 _tokenBoardPos[i] = syncedTokenBoardPos[i];
-                _tokenSteps[i]    = syncedTokenSteps[i];
+                _tokenSteps[i] = syncedTokenSteps[i];
             }
 
             // Recompute legal moves on every client when in SelectMove phase so highlights are correct.
@@ -111,7 +111,7 @@ namespace jp.ootr.ludo
             else
                 _legalMoveCount = 0;
 
-            if (boardView != null)    boardView.OnStateUpdated(this);
+            if (boardView != null) boardView.OnStateUpdated(this);
             if (uiController != null) uiController.OnStateUpdated(this);
         }
 
@@ -119,26 +119,26 @@ namespace jp.ootr.ludo
         private void PushState()
         {
             _turnSerial++;
-            syncedTurnSerial        = _turnSerial;
-            syncedGamePhase         = _gamePhase;
+            syncedTurnSerial = _turnSerial;
+            syncedGamePhase = _gamePhase;
             syncedCurrentPlayerSlot = _currentPlayerSlot;
-            syncedDiceValue         = _diceValue;
-            syncedEndRuleMode       = _endRuleMode;
+            syncedDiceValue = _diceValue;
+            syncedEndRuleMode = _endRuleMode;
 
             for (int i = 0; i < 4; i++)
             {
-                syncedPlayerIds[i]      = _playerIds[i];
-                syncedPlayerActive[i]   = _playerActive[i];
+                syncedPlayerIds[i] = _playerIds[i];
+                syncedPlayerActive[i] = _playerActive[i];
                 syncedPlayerFinished[i] = _playerFinished[i];
-                syncedPlayerRank[i]     = _playerRank[i];
-                syncedOrderRolls[i]     = _orderRolls[i];
+                syncedPlayerRank[i] = _playerRank[i];
+                syncedOrderRolls[i] = _orderRolls[i];
             }
 
             for (int i = 0; i < 16; i++)
             {
-                syncedTokenState[i]    = _tokenState[i];
+                syncedTokenState[i] = _tokenState[i];
                 syncedTokenBoardPos[i] = _tokenBoardPos[i];
-                syncedTokenSteps[i]    = _tokenSteps[i];
+                syncedTokenSteps[i] = _tokenSteps[i];
             }
 
             Sync();
@@ -147,8 +147,8 @@ namespace jp.ootr.ludo
         // ─── Board Math ──────────────────────────────────────────────────────
         private int ComputeBoardPos(int slot, int steps)
         {
-            if (steps < 40)            return (START_POS[slot] + steps) % 40;
-            if (steps <= TOTAL_STEPS)  return HOME_BASE[slot] + (steps - 40);
+            if (steps < 40) return (START_POS[slot] + steps) % 40;
+            if (steps <= TOTAL_STEPS) return HOME_BASE[slot] + (steps - 40);
             return -2;
         }
 
@@ -165,22 +165,22 @@ namespace jp.ootr.ludo
         {
             for (int i = 0; i < 16; i++)
             {
-                _tokenState[i]    = TokenState.Yard;
-                _tokenSteps[i]    = -1;
+                _tokenState[i] = TokenState.Yard;
+                _tokenSteps[i] = -1;
                 _tokenBoardPos[i] = -1;
             }
             for (int i = 0; i < 4; i++)
             {
-                _playerIds[i]      = 0;
-                _playerActive[i]   = false;
+                _playerIds[i] = 0;
+                _playerActive[i] = false;
                 _playerFinished[i] = false;
-                _playerRank[i]     = 0;
-                _orderRolls[i]     = 0;
+                _playerRank[i] = 0;
+                _orderRolls[i] = 0;
             }
             _currentPlayerSlot = 0;
-            _diceValue         = 0;
-            _legalMoveCount    = 0;
-            _gamePhase         = GamePhase.Lobby;
+            _diceValue = 0;
+            _legalMoveCount = 0;
+            _gamePhase = GamePhase.Lobby;
         }
 
         // ─── Game Flow ───────────────────────────────────────────────────────
@@ -263,7 +263,7 @@ namespace jp.ootr.ludo
             if (_gamePhase != GamePhase.SelectMove) return;
 
             int globalIdx = _currentPlayerSlot * 4 + localIdx;
-            bool isLegal  = false;
+            bool isLegal = false;
             for (int i = 0; i < _legalMoveCount; i++)
                 if (_legalMoveTokenIndices[i] == globalIdx) { isLegal = true; break; }
             if (!isLegal) return;
@@ -283,7 +283,7 @@ namespace jp.ootr.ludo
             else
             {
                 _currentPlayerSlot = FindNextActiveSlot(_currentPlayerSlot);
-                _gamePhase         = GamePhase.TurnBegin;
+                _gamePhase = GamePhase.TurnBegin;
             }
         }
 
@@ -295,7 +295,7 @@ namespace jp.ootr.ludo
 
             if (_afterAnimationGameEnded)
             {
-                _gamePhase               = GamePhase.GameEnd;
+                _gamePhase = GamePhase.GameEnd;
                 _afterAnimationGameEnded = false;
             }
             else
@@ -324,7 +324,7 @@ namespace jp.ootr.ludo
                 return dice == 6 && CanEnterStartSquare(slot);
 
             int fromSteps = _tokenSteps[tokenIdx];
-            int toSteps   = fromSteps + dice;
+            int toSteps = fromSteps + dice;
             if (toSteps > TOTAL_STEPS) return false;
             if (!IsPathClear(slot, fromSteps, toSteps)) return false;
 
@@ -440,8 +440,8 @@ namespace jp.ootr.ludo
 
             if (_tokenState[globalTokenIdx] == TokenState.Yard)
             {
-                _tokenSteps[globalTokenIdx]    = 0;
-                _tokenState[globalTokenIdx]    = TokenState.Track;
+                _tokenSteps[globalTokenIdx] = 0;
+                _tokenState[globalTokenIdx] = TokenState.Track;
                 _tokenBoardPos[globalTokenIdx] = START_POS[slot];
                 return;
             }
@@ -451,20 +451,20 @@ namespace jp.ootr.ludo
 
             if (newSteps >= 40)
             {
-                _tokenState[globalTokenIdx]    = TokenState.HomeRow;
+                _tokenState[globalTokenIdx] = TokenState.HomeRow;
                 _tokenBoardPos[globalTokenIdx] = ComputeBoardPos(slot, newSteps);
                 CheckPlayerFinished(slot);
             }
             else
             {
-                _tokenState[globalTokenIdx]    = TokenState.Track;
+                _tokenState[globalTokenIdx] = TokenState.Track;
                 _tokenBoardPos[globalTokenIdx] = ComputeBoardPos(slot, newSteps);
                 int captured = FindCapturedToken(_tokenBoardPos[globalTokenIdx], slot);
                 if (captured != -1)
                 {
-                    _tokenState[captured]    = TokenState.Yard;
+                    _tokenState[captured] = TokenState.Yard;
                     _tokenBoardPos[captured] = -1;
-                    _tokenSteps[captured]    = -1;
+                    _tokenSteps[captured] = -1;
                 }
             }
         }
@@ -477,7 +477,7 @@ namespace jp.ootr.ludo
             for (int t = slot * 4; t < slot * 4 + 4; t++)
                 if (_tokenState[t] != TokenState.HomeRow) return;
 
-            _playerRank[slot]     = CountFinishedPlayers() + 1;
+            _playerRank[slot] = CountFinishedPlayers() + 1;
             _playerFinished[slot] = true;
             CheckGameEnd();
         }
@@ -501,7 +501,7 @@ namespace jp.ootr.ludo
                     {
                         if (_playerActive[s] && !_playerFinished[s])
                         {
-                            _playerRank[s]     = CountFinishedPlayers() + 1;
+                            _playerRank[s] = CountFinishedPlayers() + 1;
                             _playerFinished[s] = true;
                         }
                     }
@@ -558,7 +558,7 @@ namespace jp.ootr.ludo
             {
                 if (_playerActive[s] && !_playerFinished[s])
                 {
-                    _playerRank[s]     = rank++;
+                    _playerRank[s] = rank++;
                     _playerFinished[s] = true;
                 }
             }
@@ -591,7 +591,7 @@ namespace jp.ootr.ludo
             if (_playerActive[slot]) { ConsoleWarn("Already active"); return; }
             if (GetSlotByPlayerId(requesterPlayerId) != -1) { ConsoleWarn("Player already joined"); return; }
 
-            _playerIds[slot]    = requesterPlayerId;
+            _playerIds[slot] = requesterPlayerId;
             _playerActive[slot] = true;
             ConsoleLog($"Joined: slot={slot}, playerId={requesterPlayerId}");
             PushState();
@@ -623,7 +623,7 @@ namespace jp.ootr.ludo
             // UI only shows leave button for the local player's own slot, so we trust the slot index.
             if (!_playerActive[slot]) return;
 
-            _playerIds[slot]    = 0;
+            _playerIds[slot] = 0;
             _playerActive[slot] = false;
             PushState();
         }
@@ -692,7 +692,7 @@ namespace jp.ootr.ludo
             int slot = GetSlotByPlayerId(player.playerId);
             if (slot == -1) return;
 
-            _playerIds[slot]    = 0;
+            _playerIds[slot] = 0;
             _playerActive[slot] = false;
 
             if (_gamePhase == GamePhase.Lobby) { PushState(); return; }
@@ -706,9 +706,9 @@ namespace jp.ootr.ludo
 
             for (int t = slot * 4; t < slot * 4 + 4; t++)
             {
-                _tokenState[t]    = TokenState.Yard;
+                _tokenState[t] = TokenState.Yard;
                 _tokenBoardPos[t] = -1;
-                _tokenSteps[t]    = -1;
+                _tokenSteps[t] = -1;
             }
 
             if (CountActivePlayers() < 2) { StartGameEndFromLeave(); return; }
@@ -720,7 +720,7 @@ namespace jp.ootr.ludo
             {
                 _afterAnimationGameEnded = false;
                 _currentPlayerSlot = FindNextActiveSlot(slot);
-                _gamePhase         = GamePhase.TurnBegin;
+                _gamePhase = GamePhase.TurnBegin;
             }
 
             CheckGameEnd();
@@ -734,9 +734,9 @@ namespace jp.ootr.ludo
 
             _OnDeserialization();
 
-            if (_gamePhase == GamePhase.GameEnd      ||
-                _gamePhase == GamePhase.Idle          ||
-                _gamePhase == GamePhase.Lobby         ||
+            if (_gamePhase == GamePhase.GameEnd ||
+                _gamePhase == GamePhase.Idle ||
+                _gamePhase == GamePhase.Lobby ||
                 _gamePhase == GamePhase.DetermineOrder) return;
 
             // アニメーション待機中にオーナーが変わった場合：ゲーム終了チェック後にターン進行
@@ -752,10 +752,10 @@ namespace jp.ootr.ludo
 
             if (!_playerActive[_currentPlayerSlot])
             {
-                _playerIds[_currentPlayerSlot]    = 0;
+                _playerIds[_currentPlayerSlot] = 0;
                 _playerActive[_currentPlayerSlot] = false;
                 _currentPlayerSlot = FindNextActiveSlot(_currentPlayerSlot);
-                _gamePhase         = GamePhase.TurnBegin;
+                _gamePhase = GamePhase.TurnBegin;
 
                 if (CountActivePlayers() < 2) StartGameEndFromLeave();
                 else PushState();
@@ -763,20 +763,20 @@ namespace jp.ootr.ludo
         }
 
         // ─── Public API Surface ──────────────────────────────────────────────
-        public GamePhase  GetPhase()               => _gamePhase;
-        public int        GetCurrentSlot()         => _currentPlayerSlot;
-        public int        GetDiceValue()           => _diceValue;
-        public int        GetTurnSerial()          => _turnSerial;
-        public bool       IsPlayerActive(int slot) => _playerActive[slot];
-        public int        GetPlayerId(int slot)    => _playerIds[slot];
-        public int        GetPlayerRank(int slot)  => _playerRank[slot];
-        public bool       IsPlayerFinished(int s)  => _playerFinished[s];
-        public int        GetOrderRoll(int slot)   => _orderRolls[slot];
-        public TokenState GetTokenState(int i)     => _tokenState[i];
-        public int        GetTokenBoardPos(int i)  => _tokenBoardPos[i];
-        public int        GetTokenSteps(int i)     => _tokenSteps[i];
-        public int[]      GetLegalMoves()          => _legalMoveTokenIndices;
-        public int        GetLegalMoveCount()      => _legalMoveCount;
+        public GamePhase GetPhase() => _gamePhase;
+        public int GetCurrentSlot() => _currentPlayerSlot;
+        public int GetDiceValue() => _diceValue;
+        public int GetTurnSerial() => _turnSerial;
+        public bool IsPlayerActive(int slot) => _playerActive[slot];
+        public int GetPlayerId(int slot) => _playerIds[slot];
+        public int GetPlayerRank(int slot) => _playerRank[slot];
+        public bool IsPlayerFinished(int s) => _playerFinished[s];
+        public int GetOrderRoll(int slot) => _orderRolls[slot];
+        public TokenState GetTokenState(int i) => _tokenState[i];
+        public int GetTokenBoardPos(int i) => _tokenBoardPos[i];
+        public int GetTokenSteps(int i) => _tokenSteps[i];
+        public int[] GetLegalMoves() => _legalMoveTokenIndices;
+        public int GetLegalMoveCount() => _legalMoveCount;
 
         // ─── Input Forwarders (called by LudoUIController) ───────────────────
         public void OnJoinSlotPressed(int slot)
@@ -801,9 +801,9 @@ namespace jp.ootr.ludo
             }
         }
 
-        public void OnRollPressed()             => RequestRoll();
+        public void OnRollPressed() => RequestRoll();
         public void OnTokenPressed(int localIdx) => HandleMoveRequestRelay(localIdx);
-        public void OnStartGamePressed()        => RequestStartGame();
-        public void OnResetGamePressed()        => RequestResetGame();
+        public void OnStartGamePressed() => RequestStartGame();
+        public void OnResetGamePressed() => RequestResetGame();
     }
 }
