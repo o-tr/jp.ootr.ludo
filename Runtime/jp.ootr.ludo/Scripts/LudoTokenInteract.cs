@@ -14,7 +14,7 @@ namespace jp.ootr.ludo
         public void Init(int index, LudoBoardView view)
         {
             _tokenIndex = index;
-            _boardView  = view;
+            _boardView = view;
             if (boxCollider == null)
                 boxCollider = GetComponent<BoxCollider>();
         }

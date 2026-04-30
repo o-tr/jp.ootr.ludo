@@ -11,14 +11,14 @@ namespace jp.ootr.ludo
     {
         [SerializeField] private LudoGameController controller;
 
-        [SerializeField] private TextMeshProUGUI   turnText;
-        [SerializeField] private TextMeshProUGUI   diceText;
+        [SerializeField] private TextMeshProUGUI turnText;
+        [SerializeField] private TextMeshProUGUI diceText;
         [SerializeField] private TextMeshProUGUI[] playerNameTexts = new TextMeshProUGUI[4];
-        [SerializeField] private TextMeshProUGUI[] rankTexts       = new TextMeshProUGUI[4];
+        [SerializeField] private TextMeshProUGUI[] rankTexts = new TextMeshProUGUI[4];
 
-        [SerializeField] private GameObject   rollButton;
-        [SerializeField] private GameObject   startButton;
-        [SerializeField] private GameObject[] joinButtons  = new GameObject[4];
+        [SerializeField] private GameObject rollButton;
+        [SerializeField] private GameObject startButton;
+        [SerializeField] private GameObject[] joinButtons = new GameObject[4];
         [SerializeField] private GameObject[] leaveButtons = new GameObject[4];
 
         [SerializeField] private GameObject lobbyPanel;
@@ -31,16 +31,16 @@ namespace jp.ootr.ludo
             GamePhase phase = ctrl.GetPhase();
 
             bool showLobby = phase == GamePhase.Lobby ||
-                             phase == GamePhase.Idle  ||
+                             phase == GamePhase.Idle ||
                              phase == GamePhase.DetermineOrder;
-            bool showGame  = phase != GamePhase.Lobby &&
-                             phase != GamePhase.Idle  &&
+            bool showGame = phase != GamePhase.Lobby &&
+                             phase != GamePhase.Idle &&
                              phase != GamePhase.GameEnd;
-            bool showEnd   = phase == GamePhase.GameEnd;
+            bool showEnd = phase == GamePhase.GameEnd;
 
             if (lobbyPanel != null) lobbyPanel.SetActive(showLobby);
-            if (gamePanel  != null) gamePanel.SetActive(showGame);
-            if (endPanel   != null) endPanel.SetActive(showEnd);
+            if (gamePanel != null) gamePanel.SetActive(showGame);
+            if (endPanel != null) endPanel.SetActive(showEnd);
 
             if (phase == GamePhase.Lobby || phase == GamePhase.Idle)
                 UpdateLobbyUI(ctrl);
@@ -54,28 +54,30 @@ namespace jp.ootr.ludo
 
         private void UpdateLobbyUI(LudoGameController ctrl)
         {
-            int  localSlot = ctrl.GetLocalPlayerSlot();
-            bool isMaster  = Networking.IsMaster;
+            int localSlot = ctrl.GetLocalPlayerSlot();
+            bool isMaster = Networking.IsMaster;
 
             for (int i = 0; i < 4; i++)
             {
                 bool active = ctrl.IsPlayerActive(i);
-                int  pid    = ctrl.GetPlayerId(i);
+                int pid = ctrl.GetPlayerId(i);
 
                 if (playerNameTexts[i] != null)
                 {
+                    string prefix = "<color=" + SLOT_COLORS[i] + ">●</color> ";
                     if (active)
                     {
                         VRCPlayerApi p = VRCPlayerApi.GetPlayerById(pid);
-                        playerNameTexts[i].text = (p != null) ? p.displayName : "?";
+                        string name = (p != null) ? p.displayName : "?";
+                        playerNameTexts[i].text = prefix + name;
                     }
                     else
                     {
-                        playerNameTexts[i].text = "---";
+                        playerNameTexts[i].text = prefix + "---";
                     }
                 }
 
-                if (joinButtons[i]  != null) joinButtons[i].SetActive(!active && localSlot == -1);
+                if (joinButtons[i] != null) joinButtons[i].SetActive(!active && localSlot == -1);
                 if (leaveButtons[i] != null) leaveButtons[i].SetActive(active && i == localSlot);
             }
 
@@ -103,9 +105,9 @@ namespace jp.ootr.ludo
 
         private void UpdateGameUI(LudoGameController ctrl)
         {
-            int       localSlot = ctrl.GetLocalPlayerSlot();
-            int       curSlot   = ctrl.GetCurrentSlot();
-            GamePhase phase     = ctrl.GetPhase();
+            int localSlot = ctrl.GetLocalPlayerSlot();
+            int curSlot = ctrl.GetCurrentSlot();
+            GamePhase phase = ctrl.GetPhase();
 
             if (turnText != null)
             {
@@ -114,7 +116,12 @@ namespace jp.ootr.ludo
                 else if (curSlot == localSlot)
                     turnText.text = "Your turn";
                 else
-                    turnText.text = "Player " + (curSlot + 1) + "'s turn";
+                {
+                    int pid2 = ctrl.GetPlayerId(curSlot);
+                    VRCPlayerApi p2 = VRCPlayerApi.GetPlayerById(pid2);
+                    string pname = (p2 != null) ? p2.displayName : "?";
+                    turnText.text = "<color=" + SLOT_COLORS[curSlot] + ">●</color> " + pname + "'s turn";
+                }
             }
 
             if (diceText != null)
@@ -166,7 +173,7 @@ namespace jp.ootr.ludo
                 {
                     int pid = ctrl.GetPlayerId(slot);
                     VRCPlayerApi p = VRCPlayerApi.GetPlayerById(pid);
-                    string name  = (p != null) ? p.displayName : "?";
+                    string name = (p != null) ? p.displayName : "?";
                     string color = SLOT_COLORS[slot];
                     rankTexts[i].text = "<color=" + color + ">●</color> " + (i + 1) + " place  " + name;
                 }
@@ -179,10 +186,10 @@ namespace jp.ootr.ludo
             ConsoleLog("OnRollClicked");
             controller.OnRollPressed();
         }
-        public void OnTokenClicked0()     => controller.OnTokenPressed(0);
-        public void OnTokenClicked1()     => controller.OnTokenPressed(1);
-        public void OnTokenClicked2()     => controller.OnTokenPressed(2);
-        public void OnTokenClicked3()     => controller.OnTokenPressed(3);
+        public void OnTokenClicked0() => controller.OnTokenPressed(0);
+        public void OnTokenClicked1() => controller.OnTokenPressed(1);
+        public void OnTokenClicked2() => controller.OnTokenPressed(2);
+        public void OnTokenClicked3() => controller.OnTokenPressed(3);
         public void OnJoinSlot0Clicked()
         {
             ConsoleLog("OnJoinSlot0Clicked");
@@ -207,8 +214,8 @@ namespace jp.ootr.ludo
         public void OnLeaveSlot1Clicked() => controller.OnLeaveSlotPressed(1);
         public void OnLeaveSlot2Clicked() => controller.OnLeaveSlotPressed(2);
         public void OnLeaveSlot3Clicked() => controller.OnLeaveSlotPressed(3);
-        public void OnStartClicked()      => controller.OnStartGamePressed();
-        public void OnResetClicked()      => controller.OnResetGamePressed();
+        public void OnStartClicked() => controller.OnStartGamePressed();
+        public void OnResetClicked() => controller.OnResetGamePressed();
         public void OnReturnToLobbyClicked() => controller.OnResetGamePressed();
     }
 }

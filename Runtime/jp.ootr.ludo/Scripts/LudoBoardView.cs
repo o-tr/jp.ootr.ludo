@@ -8,29 +8,29 @@ namespace jp.ootr.ludo
     {
         [SerializeField] private LudoGameController controller;
 
-        [SerializeField] private Transform[] tokenObjects    = new Transform[16];
-        [SerializeField] private Transform[] boardAnchors    = new Transform[40];
-        [SerializeField] private Transform[] homeRowAnchors  = new Transform[16];
-        [SerializeField] private Transform[] yardAnchors     = new Transform[16];
+        [SerializeField] private Transform[] tokenObjects = new Transform[16];
+        [SerializeField] private Transform[] boardAnchors = new Transform[40];
+        [SerializeField] private Transform[] homeRowAnchors = new Transform[16];
+        [SerializeField] private Transform[] yardAnchors = new Transform[16];
 
-        [SerializeField] private GameObject[] highlights    = new GameObject[16];
-        [SerializeField] private Vector3[]   visualOffsets = new Vector3[4];
+        [SerializeField] private GameObject[] highlights = new GameObject[16];
+        [SerializeField] private Vector3[] visualOffsets = new Vector3[4];
 
         private LudoTokenInteract[] _tokenInteracts = new LudoTokenInteract[16];
 
-        private int[]        viewTokenBoardPos = new int[16];
-        private int[]        viewTokenSteps    = new int[16];
-        private TokenState[] viewTokenState    = new TokenState[16];
-        private int          viewTurnSerial    = -1;
-        private bool         _isInitialized    = false;
-        private int[]        _localVisualSlot  = new int[16];
-        private int[]        _visualSlotCounts = new int[40];
-        private Vector3[]    _targetPos        = new Vector3[16];
-        private bool[]       _animating        = new bool[16];
-        private int[]        _animTargetSteps  = new int[16];
-        private int          _movingTokenIdx      = -1;  // 現在移動中のコマインデックス
-        private int          _pendingCaptureToken = -1;  // 移動完了後にヤードへ戻すコマインデックス
-        private bool[]       _animatingCapture    = new bool[16]; // ヤードへの帰還アニメーション中フラグ
+        private int[] viewTokenBoardPos = new int[16];
+        private int[] viewTokenSteps = new int[16];
+        private TokenState[] viewTokenState = new TokenState[16];
+        private int viewTurnSerial = -1;
+        private bool _isInitialized = false;
+        private int[] _localVisualSlot = new int[16];
+        private int[] _visualSlotCounts = new int[40];
+        private Vector3[] _targetPos = new Vector3[16];
+        private bool[] _animating = new bool[16];
+        private int[] _animTargetSteps = new int[16];
+        private int _movingTokenIdx = -1;  // 現在移動中のコマインデックス
+        private int _pendingCaptureToken = -1;  // 移動完了後にヤードへ戻すコマインデックス
+        private bool[] _animatingCapture = new bool[16]; // ヤードへの帰還アニメーション中フラグ
 
         // 1マス移動あたりのアニメーション速度（Lerp係数）
         private const float STEP_ANIM_SPEED = 15f;
@@ -67,9 +67,9 @@ namespace jp.ootr.ludo
                 if (newSteps > viewTokenSteps[i])
                 {
                     // 前進移動：1マスずつ順に経由するアニメーション
-                    _movingTokenIdx     = i;
+                    _movingTokenIdx = i;
                     _animTargetSteps[i] = newSteps;
-                    _animating[i]       = true;
+                    _animating[i] = true;
                     _animatingCapture[i] = false;
                     AdvanceToNextStep(i);
                 }
@@ -77,9 +77,9 @@ namespace jp.ootr.ludo
                 {
                     // steps が減る：捕獲またはリセット
                     int newPos = ctrl.GetTokenBoardPos(i);
-                    _animating[i]        = false;
+                    _animating[i] = false;
                     _animatingCapture[i] = false;
-                    viewTokenSteps[i]    = newSteps;
+                    viewTokenSteps[i] = newSteps;
                     viewTokenBoardPos[i] = newPos;
 
                     if (newSteps == -1 && ctrl.GetPhase() == GamePhase.ResolvingMove)
@@ -110,14 +110,14 @@ namespace jp.ootr.ludo
                 Transform anchor = GetAnchor(i, pos);
                 if (anchor != null && tokenObjects[i] != null)
                     tokenObjects[i].position = anchor.position + GetVisualOffset(i, pos);
-                _animating[i]        = false;
+                _animating[i] = false;
                 _animatingCapture[i] = false;
                 viewTokenBoardPos[i] = pos;
-                viewTokenSteps[i]    = ctrl.GetTokenSteps(i);
-                viewTokenState[i]    = ctrl.GetTokenState(i);
-                _animTargetSteps[i]  = ctrl.GetTokenSteps(i);
+                viewTokenSteps[i] = ctrl.GetTokenSteps(i);
+                viewTokenState[i] = ctrl.GetTokenState(i);
+                _animTargetSteps[i] = ctrl.GetTokenSteps(i);
             }
-            _movingTokenIdx      = -1;
+            _movingTokenIdx = -1;
             _pendingCaptureToken = -1;
             viewTurnSerial = ctrl.GetTurnSerial();
             UpdateHighlights(ctrl);
@@ -129,7 +129,7 @@ namespace jp.ootr.ludo
         /// </summary>
         private void AdvanceToNextStep(int tokenIdx)
         {
-            int nextStep     = viewTokenSteps[tokenIdx] + 1;
+            int nextStep = viewTokenSteps[tokenIdx] + 1;
             int nextBoardPos = controller.ComputeTokenBoardPos(tokenIdx, nextStep);
             Transform anchor = GetAnchor(tokenIdx, nextBoardPos);
             if (anchor == null)
@@ -175,8 +175,8 @@ namespace jp.ootr.ludo
             if (boardPos >= 40 && boardPos < 44)
             {
                 int colorSlot = tokenIdx / 4;
-                int row       = boardPos - 40;
-                int idx       = colorSlot * 4 + row;
+                int row = boardPos - 40;
+                int idx = colorSlot * 4 + row;
                 if (idx < homeRowAnchors.Length) return homeRowAnchors[idx];
                 return null;
             }
@@ -201,7 +201,7 @@ namespace jp.ootr.ludo
 
             if (!isSelectMove) return;
 
-            int count  = ctrl.GetLegalMoveCount();
+            int count = ctrl.GetLegalMoveCount();
             int[] moves = ctrl.GetLegalMoves();
             for (int i = 0; i < count; i++)
             {
@@ -242,7 +242,7 @@ namespace jp.ootr.ludo
             if (tokenObjects[tokenIdx] == null) return;
             Transform yardAnchor = GetAnchor(tokenIdx, -1);
             if (yardAnchor == null) return;
-            _targetPos[tokenIdx]        = yardAnchor.position;
+            _targetPos[tokenIdx] = yardAnchor.position;
             _animatingCapture[tokenIdx] = true;
         }
 
